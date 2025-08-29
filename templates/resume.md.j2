@@ -1,0 +1,42 @@
+# {{ basics.name }}
+{{ basics.title }}
+
+- Email: {{ basics.email }}{% if basics.phone %} | Phone: {{ basics.phone }}{% endif %}{% if basics.location %} | {{ basics.location }}{% endif %}
+- LinkedIn: {{ basics.linkedin }}
+
+---
+
+## Summary
+{{ basics.summary }}
+
+{% if experience %}
+## Experience
+{% for job in experience %}
+**{{ job.title }} — {{ job.company }}**  ({{ job.start }}–{{ job.end or "Present" }})
+- {{ job.location }}
+{% for b in job.bullets %}
+- {{ b }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+{% if education %}
+## Education
+{% for ed in education %}
+**{{ ed.school }}** — {{ ed.degree }} ({{ ed.start }}–{{ ed.end }})
+{% endfor %}
+{% endif %}
+
+{% if skills %}
+## Skills
+{{ skills | join(", ") }}
+{% endif %}
+
+{% if certs %}
+## Certifications
+{% for c in certs %}
+- {{ c }}
+{% endfor %}
+{% endif %}
+
