@@ -1,0 +1,55 @@
+name: Build Resume PDF
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate resume.md (if LinkedIn PDF exists)
+        env:
+          INPUT_PDF: ${{ vars.LINKEDIN_PDF_PATH }}
+        run: |
+          set -e
+          PDF_PATH="${INPUT_PDF:-LinkedIn_Profile.pdf}"
+          if [ -f "$PDF_PATH" ]; then
+            echo "Found $PDF_PATH - generating resume.md"
+            PYTHONPATH=src python -m resume_from_linkedin.cli "$PDF_PATH" -o resume.md
+          else
+            echo "No LinkedIn PDF found; expecting resume.md to already exist."
+            test -f resume.md || (echo "resume.md missing and no PDF provided"; exit 1)
+          fi
+
+      - name: Install Pandoc + TeX (for PDF export)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
+
+      - name: Build resume.pdf
+        run: |
+          pandoc resume.md -o resume.pdf --pdf-engine=xelatex
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-pdf
+          path: resume.pdf
